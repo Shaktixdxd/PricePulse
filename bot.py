@@ -17,11 +17,11 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # --- CONFIGURATION ---
-# Replace with your actual target chat IDs. These must be strings.
-TARGET_CHAT_ID_1 = "YOUR_FIRST_CHAT_ID"
-TARGET_CHAT_ID_2 = "YOUR_SECOND_CHAT_ID"
-TARGET_CHAT_ID_3 = "YOUR_THIRD_CHAT_ID"
-TARGET_CHATS = [TARGET_CHAT_ID_1, TARGET_CHAT_ID_2, TARGET_CHAT_ID_3]
+TARGET_CHAT_ID_1 = "https://t.me/+nyAefpjyXpw3YTg1"
+TARGET_CHAT_ID_2 = "https://t.me/+PaKEPPClQpEyMThl"
+TARGET_CHAT_ID_3 = "https://t.me/+epWUTCuzzkw3YTc9"
+TARGET_CHAT_ID_4 = "https://t.me/c/2551597610/2"
+TARGET_CHATS = [TARGET_CHAT_ID_1, TARGET_CHAT_ID_2, TARGET_CHAT_ID_3, TARGET_CHAT_ID_4]
 
 # --- MESSAGES (You can customize these) ---
 M1 = "Welcome to the bot! This is message M1."
@@ -33,27 +33,21 @@ M6 = "You must be a verified user to send media. Please click the VERIFY button 
 M7 = "You are verified. Please send any media file you want to share."
 
 # --- STATE MANAGEMENT ---
-# NOTE: This is an in-memory dictionary. If the bot restarts, all data is lost.
-# For a real application, you should use a database (like SQLite).
 user_states = {}
 
 def set_verified_status(user_id, status: bool):
-    """Sets the verification status for a user."""
     if user_id not in user_states:
         user_states[user_id] = {}
     user_states[user_id]['verified'] = status
     logger.info(f"User {user_id} verification status set to {status}")
 
 def is_verified(user_id) -> bool:
-    """Checks if a user is verified. Defaults to False."""
     return user_states.get(user_id, {}).get('verified', False)
 
 # --- BOT HANDLERS ---
-# Define states for the conversation
 MENU, AWAITING_MEDIA = range(2)
 
 async def forward_message_to_targets(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    """Forwards the user's message to all target chats."""
     message = update.effective_message
     for chat_id in TARGET_CHATS:
         try:
@@ -66,9 +60,8 @@ async def forward_message_to_targets(update: Update, context: ContextTypes.DEFAU
             logger.error(f"Failed to forward message to {chat_id}. Error: {e}")
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Starts the bot, sends welcome messages, and shows the main menu."""
     user_id = update.effective_user.id
-    set_verified_status(user_id, False) # Reset verification on start/restart
+    set_verified_status(user_id, False)
 
     await update.message.reply_text(M1)
     await update.message.reply_text(M2)
@@ -80,11 +73,10 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return MENU
 
 async def handle_menu_choice(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles button presses from the main menu."""
     user_choice = update.message.text
     user_id = update.effective_user.id
 
-    await forward_message_to_targets(update, context) # Forward the button press text
+    await forward_message_to_targets(update, context)
 
     if user_choice == "RESTART":
         return await start(update, context)
@@ -115,17 +107,20 @@ async def handle_contact(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
         set_verified_status(user_id, True)
         await update.message.reply_text(M4)
         logger.info(f"User {user_id} verified with phone {contact.phone_number}")
+
+    # FIXED: After verification, show the main menu again WITHOUT resetting the status
+    keyboard = [["RESTART", "MEDIA", "VERIFY"]]
+    reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True)
+    await update.message.reply_text("You are now verified. Please choose an option from the menu.", reply_markup=reply_markup)
     
-    return await start(update, context)
+    return MENU
 
 async def handle_media_and_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Handles media and text submissions when in AWAITING_MEDIA state."""
     await update.message.reply_text("Thank you for your submission! Forwarding it now.")
     await forward_message_to_targets(update, context)
     return AWAITING_MEDIA
 
 async def handle_unverified_messages(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Catches all messages from unverified users not handled by buttons."""
     message = update.message
     if message.text:
         await forward_message_to_targets(update, context)
@@ -134,8 +129,6 @@ async def handle_unverified_messages(update: Update, context: ContextTypes.DEFAU
     return MENU
 
 def main() -> None:
-    """Run the bot."""
-    # This is the secure way to get the token.
     BOT_TOKEN = os.getenv("BOT_TOKEN")
     if not BOT_TOKEN:
         logger.error("FATAL: BOT_TOKEN environment variable not set.")
