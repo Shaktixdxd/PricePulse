@@ -2,7 +2,7 @@
 
 **Project status update :-**
 
-**Data source:** This project used historical price data for Apple (ticker: AAPL) for research and prototyping purposes.
+**Data source:** This project used historical price data for Apple (ticker: AAPL) for research and prototyping purposes.<br>
 
 **Repository notice:** The repository content has been temporarily taken down due to inconsistencies identified in the provided dataset and recent changes to upstream API credentials.
 
