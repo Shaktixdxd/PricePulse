@@ -1,4 +1,4 @@
-# PricePulse - Stock Price Prediction & Forecasting Model 
+# PricePulse : Stock Price Prediction & Forecasting Model 
 
 **Project Status Update :-**
 
